@@ -115,4 +115,5 @@ dmypy.json
 
 # ignore folders
 _docs/*
+data/*
 submission/*
