@@ -4,8 +4,8 @@ The proposed project is inspired from [iWildCam 2019](https://www.kaggle.com/c/i
 ## data
 It contains the images dataset and a CSV file with labels.
 
-## Animal_identifier
-It describes the first part of the project that identify the presence of an animal.
+## proposal
+It describes the project objectives and details the data contents and methods used for the second project which is classifying several animal species and humans.
 
-## Species_identifier
-It presents the second part of the project that classify the animal species.
+## submission
+It contains experiments codes (.py % .ipynb) and the report of the analysis of the second project.
