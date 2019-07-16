@@ -5,6 +5,8 @@ import cv2
 import numpy as np
 import random
 
+import sys
+sys.path.insert(0, '../submission/')
 from utils import list_files, imshow
 
 
