@@ -5,33 +5,21 @@ import cv2
 import numpy as np
 import random
 
-#%% construct the entire CSV file
+import sys, os
+sys.path.append(os.path.join(os.path.dirname(sys.path[0]),'../submission/'))
+from utils import list_files, imshow
 
-if False:
-    import sys, os
-    #sys.path.append(os.path.join(os.path.dirname(sys.path[0]),'../submission/'))
-    from utils import list_files, imshow
-    
-    csv_directory = '../data/Lepus/csv_files'
-    
-    csv_files = list_files(csv_directory)
-    
-    print(*csv_files)
-    csv_list = []
-    for csv_file in csv_files:
-        csv_list.append(pd.read_csv(csv_file))
-    
-    data = pd.concat(csv_list)
-    
-    data.to_csv(csv_directory + '/DeepLearningExport.csv', header = True, index = False)
 
-#%% read full data
+csv_file = '../data/DeepLearning/DeepLearningExport.csv'
 
-data = pd.read_csv('../data/Lepus/csv_files/DeepLearningExport.csv')
+data = pd.read_csv(csv_file)
+data.head()
 
-print(data.head())
 
 print('The amount of present species and humans is:', data.taxon_name.count())
+
+# drop data with empty images
+data_clr = data.drop(data.index[data.taxon_name.isna()],0)
 
 #%% empty/human/animal images imbalancing
 
@@ -54,53 +42,10 @@ count_by_category_norm.file_id.plot.bar(ax=f.gca())
 plt.ylabel('images proportion')
 plt.title('Data imbalancing for each category')
 plt.tight_layout()
-#plt.ylim([0, 1])
+plt.ylim([0, 1])
 plt.show()
 
-print(*count_by_category_norm.file_id.values)
-
-#%% CUMULATIVE PERCENTAGE OF SPECIES + EXAMPLE OF MOST PRESENT SPECIES
-
-animals = df[df.category == 'animal']
-
-count_animal_species = animals.groupby(['taxon_name']).count()
-
-cum_percentage = count_animal_species.file_id.sort_values(ascending=False).cumsum()
-cum_percentage /= count_animal_species.file_id.sum()
-
-cum_percentage.reset_index().plot(marker='o',legend=False,grid=True)
-plt.xlabel('Species')
-plt.ylabel('Percentage of species in animal set')
-
-# show one image for the three most present species
-
-directory = '../data/Lepus/'
-
-# Create figure with subplots
-fig, axes = plt.subplots(nrows=1, ncols=5, figsize=(15, 5))
-
-for i, axis in enumerate(axes.flatten()):
-    print(i, animals[animals.taxon_name==cum_percentage.index[i]].file_path.values[0])
-    img = cv2.imread(directory + animals[animals.taxon_name==cum_percentage.index[i]].file_path.values[0]).astype(np.float32)/255
-    if len(img.shape) > 2:
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    
-    axis.set_title('Taxon: {}'.format(cum_percentage.index[i]))
-    axis.imshow(img)
-    axis.get_xaxis().set_visible(False) # disable x-axis
-    axis.get_yaxis().set_visible(False) # disable y-axis
-    
-plt.show()
-
-#%% empty images
-
-# drop data with empty images
-#data_clr = data.drop(data.index[data.taxon_name.isna()],0)
-data_clr = data
-
-print(data_clr.taxon_name.isna().sum())
-
-#%% Data imbalancing
+#%% species imbalancing
 
 count_by_species = data_clr.groupby(['taxon_name']).count()
 
@@ -127,19 +72,7 @@ plt.title('Proportion of day/night/twilight for each category')
 plt.tight_layout()
 plt.show()
 
-#%% empty/human/animal and solar angle
-
-group_by_category = df.groupby(['category'])
-
-f=plt.figure()
-group_by_category.sun_angle.plot.hist(alpha=0.5, density=True, ax=f.gca())
-plt.legend(loc='center left', bbox_to_anchor=(1.0, 0.5))
-plt.ylabel('proportion of data for each category')
-plt.xlabel('solar angle')
-plt.tight_layout()
-plt.show()
-
-#%% Additional information as improvment
+#%% species Additional information as improvment
 
 count_by_species_period = data_clr.groupby(['taxon_name','file_period']).count()
 
@@ -153,6 +86,26 @@ plt.legend(loc='center left', bbox_to_anchor=(1.0, 0.5))
 plt.ylabel('proportion in %')
 plt.title('Proportion of day/night/twilight for each species')
 plt.tight_layout()
+plt.show()
+
+#%% Examples of images
+
+random.seed(4)
+rand_path = random.sample(list(data_clr.file_path),8)
+
+# Create figure with subplots
+fig, axes = plt.subplots(nrows=2, ncols=4, figsize=(15, 5))
+
+for i, axis in enumerate(axes.flatten()):
+    img = cv2.imread(directory + rand_path[i][8:]).astype(np.float32)/255
+    if len(img.shape) > 2:
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    
+    axis.set_title('Image: {}'.format(rand_path[i][8:]))
+    axis.imshow(img)
+    axis.get_xaxis().set_visible(False) # disable x-axis
+    axis.get_yaxis().set_visible(False) # disable y-axis
+    
 plt.show()
 
 #%% Timelaps images
@@ -219,23 +172,3 @@ plt.tight_layout()
 plt.xlim([0, 25])
 plt.show()
 
-#%% Examples of images
-
-random.seed(4)
-rand_path = random.sample(list(data_clr.file_path),8)
-
-# Create figure with subplots
-fig, axes = plt.subplots(nrows=2, ncols=4, figsize=(15, 5))
-
-# Plot the 16 kernels from the first convolutional layer
-for i, axis in enumerate(axes.flatten()):
-    img = cv2.imread(directory + rand_path[i][8:]).astype(np.float32)/255
-    if len(img.shape) > 2:
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    
-    axis.set_title('Image: {}'.format(rand_path[i][8:]))
-    axis.imshow(img)
-    axis.get_xaxis().set_visible(False) # disable x-axis
-    axis.get_yaxis().set_visible(False) # disable y-axis
-    
-plt.show()
